@@ -12,7 +12,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+<<<<<<< HEAD
 import logo from "@/assets/svg/logo.svg"
+=======
+import logo from "@/assets/svg/logoipsum-423(1).svg"
+>>>>>>> c34482f (feat:added alert comunicating sucessful login or registration also added specfifc validadtion)
 import { Input } from "@/components/ui/input"
 import { Link } from "react-router-dom"
 import { CheckCircle2Icon } from "lucide-react"
