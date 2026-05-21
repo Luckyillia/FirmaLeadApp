@@ -35,7 +35,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
   return (
     <Card {...props}>
-<<<<<<< HEAD
       {submitted && (
           <div className="fixed bottom-4 right-4 z-50">
             <Alert className="max-w-sm shadow-lg">
@@ -48,8 +47,6 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
           </div>
         )}
         
-=======
->>>>>>> 91e109d (feat:added working button login directing to login page and also to register page)
       <img src={logo} alt="Logo" className="h-10 w-auto m-10" />
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
@@ -119,14 +116,8 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
             <FieldGroup>
               <Field>
                 <Button type="submit">Create Account</Button>
-<<<<<<< HEAD
                 <FieldDescription className="px-6 text-center">
                   Already have an account? <Link to="/login">Sign in</Link>
-=======
-                
-                <FieldDescription className="px-6 text-center">
-                  Already have an account? <a href="#"><Link to="/login">Sign in</Link></a>
->>>>>>> 91e109d (feat:added working button login directing to login page and also to register page)
                 </FieldDescription>
               </Field>
             </FieldGroup>
