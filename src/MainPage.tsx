@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import HeroSection from "@/components/HeroSection";
 import LoginPage from "@/LoginPage";
 import RegisterPage from "@/RegisterPage";
+import DashboardAdmin from "@/DashbordAdminPage";
 
 function MainPage() {
   return (
