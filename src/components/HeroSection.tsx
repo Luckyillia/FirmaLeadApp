@@ -70,7 +70,7 @@ export default function HeroSection() {
             <Button
               className="bg-transparent"
             >
-              <Link to="/" className="flex items-center">
+              <Link to="/contact" className="flex items-center">
                 <span className=" text-sm font-bold sm:text-xl">
                   Fill out out our 
                   <br />
