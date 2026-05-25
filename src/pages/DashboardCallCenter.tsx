@@ -1,43 +1,121 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PhoneCall, Clock, CheckCircle, XCircle, PhoneForwarded, TrendingUp, Users } from "lucide-react";
+import { PhoneCall, Clock, CheckCircle, PhoneForwarded, TrendingUp, Users, Target, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useState } from 'react';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardCallCenter() {
-  const [dailyStats, setDailyStats] = useState({
-    inQueue: 12,
-    todayCalls: 34,
-    successRate: 68,
-    avgCallTime: "4:32",
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    inQueue: 0,
+    todayCalls: 0,
+    successRate: 0,
+    avgCallTime: "0:00",
     goal: 50,
-    achieved: 34
+    achieved: 0,
+    totalLeads: 0,
+    completedLeads: 0
   });
 
-  const hourlyData = [
-    { hour: '9:00', calls: 8, success: 5 },
-    { hour: '10:00', calls: 12, success: 8 },
-    { hour: '11:00', calls: 10, success: 7 },
-    { hour: '12:00', calls: 6, success: 4 },
-    { hour: '13:00', calls: 4, success: 3 },
-    { hour: '14:00', calls: 9, success: 6 },
-    { hour: '15:00', calls: 11, success: 8 },
-    { hour: '16:00', calls: 7, success: 5 },
-  ];
+  const [hourlyData, setHourlyData] = useState([
+    { hour: '9:00', calls: 0, success: 0 },
+    { hour: '10:00', calls: 0, success: 0 },
+    { hour: '11:00', calls: 0, success: 0 },
+    { hour: '12:00', calls: 0, success: 0 },
+    { hour: '13:00', calls: 0, success: 0 },
+    { hour: '14:00', calls: 0, success: 0 },
+    { hour: '15:00', calls: 0, success: 0 },
+    { hour: '16:00', calls: 0, success: 0 },
+  ]);
 
-  const queueData = [
-    { priority: "Wysoki", count: 4, companies: ["Firma XYZ", "Tech Solutions", "Budowlanka", "Eko-Energia"] },
-    { priority: "Średni", count: 5, companies: ["Smart Home", "Net Systems", "Data Center", "Cloud Tech", "AI Solutions"] },
-    { priority: "Niski", count: 3, companies: ["Local Shop", "Small Biz", "Startup X"] },
+  const [queueData, setQueueData] = useState([
+    { priority: "Wysoki", count: 0, companies: [] },
+    { priority: "Średni", count: 0, companies: [] },
+    { priority: "Niski", count: 0, companies: [] },
+  ]);
+
+  useEffect(() => {
+    fetchCallCenterData();
+  }, [user]);
+
+  const fetchCallCenterData = async () => {
+    try {
+      // Pobierz leady w kolejce
+      const { count: queueCount, data: queueLeads } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('status', 'new')
+        .is('assigned_to', null);
+
+      setStats(prev => ({ ...prev, inQueue: queueCount || 0 }));
+
+      // Pobierz leady przypisane do tego agenta
+      const { count: agentLeads } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .eq('assigned_to', user?.id);
+
+      // Pobierz zrealizowane leady
+      const { count: completedLeads } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .eq('assigned_to', user?.id)
+        .eq('status', 'completed');
+
+      setStats(prev => ({
+        ...prev,
+        totalLeads: agentLeads || 0,
+        completedLeads: completedLeads || 0,
+        successRate: agentLeads ? Math.round((completedLeads! / agentLeads!) * 100) : 0,
+        achieved: agentLeads || 0,
+      }));
+
+      // Symulowane dane dla wykresów (później podłączysz prawdziwe)
+      setHourlyData([
+        { hour: '9:00', calls: 8, success: 5 },
+        { hour: '10:00', calls: 12, success: 8 },
+        { hour: '11:00', calls: 10, success: 7 },
+        { hour: '12:00', calls: 6, success: 4 },
+        { hour: '13:00', calls: 4, success: 3 },
+        { hour: '14:00', calls: 9, success: 6 },
+        { hour: '15:00', calls: 11, success: 8 },
+        { hour: '16:00', calls: 7, success: 5 },
+      ]);
+
+      setQueueData([
+        { priority: "Wysoki", count: 4, companies: ["Firma XYZ", "Tech Solutions", "Budowlanka", "Eko-Energia"] },
+        { priority: "Średni", count: 5, companies: ["Smart Home", "Net Systems", "Data Center", "Cloud Tech", "AI Solutions"] },
+        { priority: "Niski", count: 3, companies: ["Local Shop", "Small Biz", "Startup X"] },
+      ]);
+
+    } catch (error) {
+      console.error('Błąd pobierania danych:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pieData = [
+    { name: 'Udane', value: stats.successRate, color: '#10b981' },
+    { name: 'Nieudane', value: 100 - stats.successRate, color: '#ef4444' },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Call Center</h1>
-        <p className="text-muted-foreground">Monitorowanie rozmów i efektywności</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Call Center</h1>
+          <p className="text-muted-foreground">Monitorowanie rozmów i efektywności</p>
+        </div>
+        <Badge variant="outline" className="px-3 py-1">
+          <PhoneCall className="h-3 w-3 mr-1" />
+          {user?.fullName}
+        </Badge>
       </div>
 
       {/* Statystyki główne */}
@@ -47,7 +125,7 @@ export default function DashboardCallCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm opacity-90">W kolejce</p>
-                <p className="text-3xl font-bold">{dailyStats.inQueue}</p>
+                <p className="text-3xl font-bold">{stats.inQueue}</p>
               </div>
               <PhoneCall className="h-8 w-8 opacity-80" />
             </div>
@@ -58,10 +136,22 @@ export default function DashboardCallCenter() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Dzisiaj</p>
-                <p className="text-2xl font-bold">{dailyStats.todayCalls}</p>
+                <p className="text-sm text-muted-foreground">Przypisane leady</p>
+                <p className="text-2xl font-bold">{stats.totalLeads}</p>
               </div>
-              <PhoneForwarded className="h-8 w-8 text-green-500" />
+              <Target className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Zrealizowane</p>
+                <p className="text-2xl font-bold text-green-600">{stats.completedLeads}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
@@ -71,21 +161,9 @@ export default function DashboardCallCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Skuteczność</p>
-                <p className="text-2xl font-bold">{dailyStats.successRate}%</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.successRate}%</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Średni czas</p>
-                <p className="text-2xl font-bold">{dailyStats.avgCallTime}</p>
-              </div>
-              <Clock className="h-8 w-8 text-orange-500" />
+              <TrendingUp className="h-8 w-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
@@ -95,15 +173,15 @@ export default function DashboardCallCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Cel dzienny</p>
-                <p className="text-2xl font-bold">{dailyStats.achieved}/{dailyStats.goal}</p>
+                <p className="text-2xl font-bold">{stats.achieved}/{stats.goal}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+              <Calendar className="h-8 w-8 text-orange-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Wykres godzinowy */}
+      {/* Wykresy */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -125,35 +203,48 @@ export default function DashboardCallCenter() {
           </CardContent>
         </Card>
 
-        {/* Postęp dzienny */}
         <Card>
           <CardHeader>
-            <CardTitle>Postęp dzienny</CardTitle>
-            <p className="text-sm text-muted-foreground">Cel: {dailyStats.goal} rozmów dziennie</p>
+            <CardTitle>Skuteczność rozmów</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span>Wykonano {dailyStats.achieved} z {dailyStats.goal} rozmów</span>
-                  <span className="font-semibold">{Math.round((dailyStats.achieved / dailyStats.goal) * 100)}%</span>
-                </div>
-                <Progress value={(dailyStats.achieved / dailyStats.goal) * 100} className="h-3" />
-              </div>
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Skuteczność</p>
-                  <p className="text-xl font-bold text-green-600">{dailyStats.successRate}%</p>
-                </div>
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Do celu</p>
-                  <p className="text-xl font-bold text-blue-600">{dailyStats.goal - dailyStats.achieved}</p>
-                </div>
-              </div>
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
+      {/* Postęp dzienny */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Postęp dzienny</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span>Wykonano {stats.achieved} z {stats.goal} rozmów</span>
+              <span className="font-semibold">{Math.round((stats.achieved / stats.goal) * 100)}%</span>
+            </div>
+            <Progress value={(stats.achieved / stats.goal) * 100} className="h-3" />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Kolejka priorytetowa */}
       <Card>
@@ -179,7 +270,7 @@ export default function DashboardCallCenter() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {priority.companies.map((company) => (
-                    <Badge key={company} variant="secondary" className="cursor-pointer hover:bg-primary hover:text-white">
+                    <Badge key={company} variant="secondary" className="cursor-pointer hover:bg-blue-500 hover:text-white">
                       {company}
                     </Badge>
                   ))}

@@ -1,48 +1,119 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Users, DollarSign, Target, ArrowRight, Calendar, Clock, Award } from "lucide-react";
+import { TrendingUp, Users, DollarSign, Target, Calendar, Clock, Award, PhoneCall, Mail, CheckCircle, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardSales() {
-  const pipelineData = [
-    { stage: "Nowe", value: 96000, count: 8, color: "#3b82f6" },
-    { stage: "Kontakt", value: 144000, count: 12, color: "#f59e0b" },
-    { stage: "Oferta", value: 72000, count: 6, color: "#8b5cf6" },
-    { stage: "Negocjacje", value: 48000, count: 4, color: "#ec4899" },
-    { stage: "Zamknięte", value: 36000, count: 3, color: "#10b981" },
-  ];
+  const { user } = useAuth();
+  const [stats, setStats] = useState({
+    pipelineValue: 0,
+    activeLeads: 0,
+    conversionRate: 0,
+    newClients: 0,
+    completedDeals: 0,
+    totalRevenue: 0
+  });
 
-  const weeklyActivity = [
-    { day: 'Pon', calls: 12, meetings: 3, deals: 2 },
-    { day: 'Wt', calls: 15, meetings: 4, deals: 3 },
-    { day: 'Śr', calls: 10, meetings: 2, deals: 1 },
-    { day: 'Czw', calls: 14, meetings: 5, deals: 4 },
-    { day: 'Pt', calls: 8, meetings: 3, deals: 2 },
-  ];
+  const [pipelineData, setPipelineData] = useState([
+    { stage: "Nowe", value: 0, count: 0, color: "#3b82f6" },
+    { stage: "Kontakt", value: 0, count: 0, color: "#f59e0b" },
+    { stage: "Oferta", value: 0, count: 0, color: "#8b5cf6" },
+    { stage: "Negocjacje", value: 0, count: 0, color: "#ec4899" },
+    { stage: "Zamknięte", value: 0, count: 0, color: "#10b981" },
+  ]);
 
-  const topDeals = [
-    { company: "Tech Corp", value: 45000, probability: 85, daysLeft: 5 },
-    { company: "Industry Solutions", value: 38000, probability: 70, daysLeft: 12 },
-    { company: "Global Trade", value: 32000, probability: 90, daysLeft: 3 },
-  ];
+  const [weeklyActivity, setWeeklyActivity] = useState([
+    { day: 'Pon', calls: 0, meetings: 0, deals: 0 },
+    { day: 'Wt', calls: 0, meetings: 0, deals: 0 },
+    { day: 'Śr', calls: 0, meetings: 0, deals: 0 },
+    { day: 'Czw', calls: 0, meetings: 0, deals: 0 },
+    { day: 'Pt', calls: 0, meetings: 0, deals: 0 },
+  ]);
+
+  const [topDeals, setTopDeals] = useState([
+    { company: "Tech Corp", value: 45000, probability: 85, daysLeft: 5, status: "Negocjacje" },
+    { company: "Industry Solutions", value: 38000, probability: 70, daysLeft: 12, status: "Oferta" },
+    { company: "Global Trade", value: 32000, probability: 90, daysLeft: 3, status: "Negocjacje" },
+  ]);
+
+  useEffect(() => {
+    fetchSalesData();
+  }, [user]);
+
+  const fetchSalesData = async () => {
+    try {
+      // Pobierz leady przypisane do handlowca
+      const { data: leads, count } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('assigned_to', user?.id);
+
+      const activeLeadsCount = leads?.filter(l => l.status !== 'completed' && l.status !== 'lost').length || 0;
+      const completedLeads = leads?.filter(l => l.status === 'completed').length || 0;
+      
+      // Symulowane wartości (podmień na prawdziwe z bazy)
+      setStats({
+        pipelineValue: 396000,
+        activeLeads: activeLeadsCount,
+        conversionRate: leads?.length ? Math.round((completedLeads / leads.length) * 100) : 0,
+        newClients: 8,
+        completedDeals: completedLeads,
+        totalRevenue: 396000
+      });
+
+      setPipelineData([
+        { stage: "Nowe", value: 96000, count: 8, color: "#3b82f6" },
+        { stage: "Kontakt", value: 144000, count: 12, color: "#f59e0b" },
+        { stage: "Oferta", value: 72000, count: 6, color: "#8b5cf6" },
+        { stage: "Negocjacje", value: 48000, count: 4, color: "#ec4899" },
+        { stage: "Zamknięte", value: 36000, count: 3, color: "#10b981" },
+      ]);
+
+      setWeeklyActivity([
+        { day: 'Pon', calls: 12, meetings: 3, deals: 2 },
+        { day: 'Wt', calls: 15, meetings: 4, deals: 3 },
+        { day: 'Śr', calls: 10, meetings: 2, deals: 1 },
+        { day: 'Czw', calls: 14, meetings: 5, deals: 4 },
+        { day: 'Pt', calls: 8, meetings: 3, deals: 2 },
+      ]);
+
+    } catch (error) {
+      console.error('Błąd pobierania danych:', error);
+    }
+  };
+
+  const getProbabilityColor = (prob: number) => {
+    if (prob >= 80) return "bg-green-500";
+    if (prob >= 60) return "bg-yellow-500";
+    return "bg-red-500";
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Pipeline Sprzedaży</h1>
-        <p className="text-muted-foreground">Zarządzanie procesem sprzedaży</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Pipeline Sprzedaży</h1>
+          <p className="text-muted-foreground">Zarządzanie procesem sprzedaży</p>
+        </div>
+        <Badge variant="outline" className="px-3 py-1">
+          <TrendingUp className="h-3 w-3 mr-1" />
+          {user?.fullName}
+        </Badge>
       </div>
 
       {/* KPI */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Pipeline value</p>
-                <p className="text-2xl font-bold">396,000 zł</p>
+                <p className="text-2xl font-bold">{stats.pipelineValue.toLocaleString()} zł</p>
               </div>
               <DollarSign className="h-8 w-8 text-green-500" />
             </div>
@@ -54,7 +125,7 @@ export default function DashboardSales() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Aktywne leady</p>
-                <p className="text-2xl font-bold">30</p>
+                <p className="text-2xl font-bold">{stats.activeLeads}</p>
               </div>
               <Target className="h-8 w-8 text-blue-500" />
             </div>
@@ -66,9 +137,21 @@ export default function DashboardSales() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Konwersja</p>
-                <p className="text-2xl font-bold">42%</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.conversionRate}%</p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Zrealizowane</p>
+                <p className="text-2xl font-bold text-green-600">{stats.completedDeals}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
@@ -103,14 +186,14 @@ export default function DashboardSales() {
                   </div>
                   <span className="font-semibold">{stage.value.toLocaleString()} zł</span>
                 </div>
-                <Progress value={(stage.value / 396000) * 100} className="h-2" />
+                <Progress value={(stage.value / stats.pipelineValue) * 100} className="h-2" />
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Wykres aktywności */}
+      {/* Wykresy */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -146,7 +229,7 @@ export default function DashboardSales() {
                       <p className="font-semibold">{deal.company}</p>
                       <p className="text-2xl font-bold text-green-600">{deal.value.toLocaleString()} zł</p>
                     </div>
-                    <Badge className={deal.probability > 80 ? "bg-green-500" : "bg-yellow-500"}>
+                    <Badge className={getProbabilityColor(deal.probability)}>
                       {deal.probability}%
                     </Badge>
                   </div>
@@ -155,8 +238,9 @@ export default function DashboardSales() {
                       <Calendar className="h-3 w-3" />
                       {deal.daysLeft} dni
                     </span>
+                    <Badge variant="outline">{deal.status}</Badge>
                     <Button variant="ghost" size="sm">
-                      Szczegóły <ArrowRight className="h-3 w-3 ml-1" />
+                      Szczegóły
                     </Button>
                   </div>
                 </div>
@@ -165,6 +249,33 @@ export default function DashboardSales() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Szybkie akcje */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Szybkie akcje</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex flex-col gap-2">
+              <PhoneCall className="h-5 w-5" />
+              <span>Zadzwoń</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex flex-col gap-2">
+              <Mail className="h-5 w-5" />
+              <span>Wyślij email</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex flex-col gap-2">
+              <Calendar className="h-5 w-5" />
+              <span>Umów spotkanie</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex flex-col gap-2">
+              <FileText className="h-5 w-5" />
+              <span>Wyślij ofertę</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
