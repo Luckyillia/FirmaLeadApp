@@ -12,7 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import logo from "@/assets/svg/logoipsum-423(1).svg"
+import logo from "@/assets/svg/logo.svg"
 import { Input } from "@/components/ui/input"
 import { Link } from "react-router-dom"
 import { CheckCircle2Icon } from "lucide-react"

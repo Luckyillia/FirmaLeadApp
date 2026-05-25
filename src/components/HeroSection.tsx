@@ -1,7 +1,7 @@
 import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroBg from "@/assets/image/image-call-center-workers-happy.png";
-import logo from "@/assets/svg/logoipsum-423(1).svg";
+import logo from "@/assets/svg/logo.svg";
 import { Link } from 'react-router-dom';
 
 export default function HeroSection() {
