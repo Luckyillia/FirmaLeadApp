@@ -76,7 +76,7 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" regex="^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,24}$" required />
+                <Input id="password" type="password" required />
               </Field>
               <Field>
                 <Button type="submit">Login</Button>

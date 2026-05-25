@@ -7,7 +7,7 @@ import DashboardPage from "@/DashbordPage";
 function MainPage() {
   return (
     <Routes>
-      <Route path="/" element={<DashboardPage />} />
+      <Route path="/" element={<HeroSection />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
     </Routes>
