@@ -1,7 +1,9 @@
+"use client"
+
 import * as React from "react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
+import { NavProjects } from "@/components/nav-projects"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -13,114 +15,86 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, Settings2Icon, CircleHelpIcon, SearchIcon, DatabaseIcon, FileChartColumnIcon, FileIcon, CommandIcon } from "lucide-react"
+import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon, SendIcon, FrameIcon, PieChartIcon, MapIcon, TerminalIcon } from "lucide-react"
 
 const data = {
   user: {
     name: "shadcn",
-    type: "Administrator",
+    email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
     {
-      title: "Dashboard",
+      title: "Playground",
       url: "#",
       icon: (
-        <LayoutDashboardIcon
-        />
-      ),
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: (
-        <ListIcon
-        />
-      ),
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: (
-        <ChartBarIcon
-        />
-      ),
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: (
-        <FolderIcon
-        />
-      ),
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: (
-        <UsersIcon
-        />
-      ),
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: (
-        <CameraIcon
+        <TerminalSquareIcon
         />
       ),
       isActive: true,
-      url: "#",
       items: [
         {
-          title: "Active Proposals",
+          title: "History",
           url: "#",
         },
         {
-          title: "Archived",
+          title: "Starred",
+          url: "#",
+        },
+        {
+          title: "Settings",
           url: "#",
         },
       ],
     },
     {
-      title: "Proposal",
+      title: "Models",
+      url: "#",
       icon: (
-        <FileTextIcon
+        <BotIcon
         />
       ),
-      url: "#",
       items: [
         {
-          title: "Active Proposals",
+          title: "Genesis",
           url: "#",
         },
         {
-          title: "Archived",
+          title: "Explorer",
+          url: "#",
+        },
+        {
+          title: "Quantum",
           url: "#",
         },
       ],
     },
     {
-      title: "Prompts",
+      title: "Documentation",
+      url: "#",
       icon: (
-        <FileTextIcon
+        <BookOpenIcon
         />
       ),
-      url: "#",
       items: [
         {
-          title: "Active Proposals",
+          title: "Introduction",
           url: "#",
         },
         {
-          title: "Archived",
+          title: "Get Started",
+          url: "#",
+        },
+        {
+          title: "Tutorials",
+          url: "#",
+        },
+        {
+          title: "Changelog",
           url: "#",
         },
       ],
     },
-  ],
-  navSecondary: [
     {
       title: "Settings",
       url: "#",
@@ -128,46 +102,66 @@ const data = {
         <Settings2Icon
         />
       ),
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+        {
+          title: "Team",
+          url: "#",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
+          url: "#",
+        },
+      ],
     },
+  ],
+  navSecondary: [
     {
-      title: "Get Help",
+      title: "Support",
       url: "#",
       icon: (
-        <CircleHelpIcon
+        <LifeBuoyIcon
         />
       ),
     },
     {
-      title: "Search",
+      title: "Feedback",
       url: "#",
       icon: (
-        <SearchIcon
+        <SendIcon
         />
       ),
     },
   ],
-  documents: [
+  projects: [
     {
-      name: "Data Library",
+      name: "Design Engineering",
       url: "#",
       icon: (
-        <DatabaseIcon
+        <FrameIcon
         />
       ),
     },
     {
-      name: "Reports",
+      name: "Sales & Marketing",
       url: "#",
       icon: (
-        <FileChartColumnIcon
+        <PieChartIcon
         />
       ),
     },
     {
-      name: "Word Assistant",
+      name: "Travel",
       url: "#",
       icon: (
-        <FileIcon
+        <MapIcon
         />
       ),
     },
@@ -176,17 +170,19 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
+            <SidebarMenuButton size="lg" asChild>
               <a href="#">
-                <CommandIcon className="size-5!" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <TerminalIcon className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">Acme Inc</span>
+                  <span className="truncate text-xs">Enterprise</span>
+                </div>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -194,7 +190,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
+        <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
