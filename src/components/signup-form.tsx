@@ -81,7 +81,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                 id="password"
                 type="password"
                 required
-                pattern=".{8,}"
+                regex="^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,24}$"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Must be at least 8 characters long.')}
