@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import logo from "@/assets/svg/logoipsum-423(1).svg"
 import { Link, useNavigate } from "react-router-dom"
-import { CheckCircle2Icon, AlertCircleIcon } from "lucide-react"
+import { AlertCircleIcon } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
@@ -30,9 +30,11 @@ export function LoginForm({
   const [password, setPassword] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
-    await login(email, password)
-    // login() ustawia user w kontekście — jeśli nie ma błędu, przekieruj
-    // sprawdzamy error po await przez ref trick — zamiast tego niech MainPage reaguje na user
+    e.preventDefault() // ← kluczowe: zapobiega przeładowaniu strony
+    const success = await login(email, password)
+    if (success) {
+      navigate("/", { replace: true })
+    }
   }
 
   return (
@@ -41,7 +43,7 @@ export function LoginForm({
         <div className="fixed bottom-4 right-4 z-50">
           <Alert variant="destructive" className="max-w-sm shadow-lg">
             <AlertCircleIcon />
-            <AlertTitle>Login failed</AlertTitle>
+            <AlertTitle>Błąd logowania</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         </div>
@@ -86,7 +88,7 @@ export function LoginForm({
               </Field>
               <Field>
                 <Button type="submit" disabled={loading}>
-                  {loading ? "Logging in..." : "Login"}
+                  {loading ? "Logowanie..." : "Login"}
                 </Button>
                 <FieldDescription className="text-center">
                   Don&apos;t have an account?{" "}
