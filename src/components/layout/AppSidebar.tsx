@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate, useLocation } from 'react-router-dom';
+import logo from '@/assets/svg/logo.svg';
 import { 
   LayoutDashboard, 
   Users, 
@@ -138,18 +139,9 @@ export function AppSidebar() {
     <Sidebar className="border-r border-gray-200 dark:border-gray-800">
       {/* Logo */}
       <SidebarHeader className="border-b border-gray-200 dark:border-gray-800 p-4">
-        <div 
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => handleNavigation('/dashboard')}
-        >
-          <div className={`w-8 h-8 ${roleColor} rounded-lg flex items-center justify-center`}>
-            <Sparkles className="w-5 h-5 text-white" />
+          <div className={"rounded-lg flex items-center justify-center"}>
+            <img src={logo} alt="Logo" className="w-full h-full" />
           </div>
-          <div>
-            <h1 className="font-bold text-lg">LeadAPP</h1>
-            <p className="text-xs text-muted-foreground">CRM System</p>
-          </div>
-        </div>
       </SidebarHeader>
 
       {/* Menu */}
