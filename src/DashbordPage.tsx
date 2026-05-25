@@ -1,10 +1,10 @@
 import { TooltipProvider } from "@/components/ui/tooltip"
-import DashbordAdmin from "@/components/dashbord-admin"
+import DashbordPage from "@/components/dashbord-page"
 
 export default function DashbordAdminPage() {
   return (
     <TooltipProvider>
-      <DashbordAdmin />
+      <DashbordPage />
     </TooltipProvider>
   )
 }
