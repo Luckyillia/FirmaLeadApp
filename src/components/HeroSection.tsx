@@ -2,6 +2,7 @@ import { Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroBg from "@/assets/image/image-call-center-workers-happy.png";
 import logo from "@/assets/svg/logoipsum-423(1).svg";
+import arrow from "@/assets/svg/arrow_right.svg";
 import { Link } from 'react-router-dom';
 
 export default function HeroSection() {
@@ -57,14 +58,41 @@ export default function HeroSection() {
 
         {/* Tekst */}
         <div className="relative z-10 px-16 pt-14 pb-20 min-h-[580px] flex flex-col justify-center">
-        <p className="text-white/85 text-sm sm:text-xl font-semibold tracking-wide mb-2">
-          Getting leads
-        </p>
-        <h1 className="text-white font-extrabold leading-[1.05] text-3xl sm:text-7xl lg:text-8xl">
-          done the
-          <br />
-          right way.
-        </h1>
+          <p className="text-white/85 text-sm sm:text-xl font-semibold tracking-wide mb-2">
+            Getting leads
+          </p>
+          <h1 className="text-white font-extrabold leading-[1.05] text-3xl sm:text-7xl lg:text-8xl">
+            done the
+            <br />
+            right way.
+          </h1>
+          <div className="mt-8">
+            <Button
+              className="bg-transparent"
+            >
+              <Link to="/contact" className="flex items-center">
+                <span className=" text-sm font-bold sm:text-xl">
+                  Fill out out our 
+                  <br />
+                  contact form
+                </span>
+                <img src={arrow} alt="Arrow" className="ml-2 size-15" />
+              </Link>
+            </Button>
+
+            <Button
+              className="bg-transparent mt-6 sm:mt-0"
+            >
+              <Link to="/register" className="flex items-center">
+                <span className="text-sm font-bold sm:text-xl">
+                  Create an 
+                  <br />
+                  account
+                </span>
+                <img src={arrow} alt="Arrow" className="ml-2 size-15 p-0 m-0" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
