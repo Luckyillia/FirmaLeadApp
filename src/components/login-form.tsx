@@ -13,7 +13,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import logo from "@/assets/svg/logoipsum-423(1).svg"
+import logo from "@/assets/svg/logo.svg"
 import { Link, useNavigate } from "react-router-dom"
 import { AlertCircleIcon } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
