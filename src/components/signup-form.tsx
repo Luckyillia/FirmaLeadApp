@@ -14,113 +14,169 @@ import {
 } from "@/components/ui/field"
 import logo from "@/assets/svg/logo.svg"
 import { Input } from "@/components/ui/input"
-import { Link } from "react-router-dom"
-import { CheckCircle2Icon } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
+import { CheckCircle2Icon, AlertCircleIcon, Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useState, useEffect } from "react"
+import { supabase, sha256 } from "@/lib/supabase"
+import { useState } from "react"
 
 export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const navigate = useNavigate()
+  const [form, setForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+  const [success, setSuccess] = useState(false)
 
-  const passwordsMatch = confirmPassword === '' || password === confirmPassword;
+  const passwordsMatch = form.confirmPassword === '' || form.password === form.confirmPassword
 
-  useEffect(() => {
-    if (submitted) {
-      const timer = setTimeout(() => setSubmitted(false), 10000)
-      return () => clearTimeout(timer)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (form.password !== form.confirmPassword) { setError('Hasła nie są identyczne.'); return }
+    if (form.password.length < 8)               { setError('Hasło musi mieć minimum 8 znaków.'); return }
+    if (form.fullName.trim().length < 3)         { setError('Podaj pełne imię i nazwisko (min. 3 znaki).'); return }
+
+    setLoading(true)
+    try {
+      const hashedPassword  = await sha256(form.password)
+      const emailNormalized = form.email.toLowerCase().trim()
+
+      // Sprawdź czy email już istnieje
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', emailNormalized)
+        .maybeSingle()
+
+      if (existing) throw new Error('Ten adres email jest już zarejestrowany.')
+
+      // Wstaw profil z zahashowanym hasłem — identyczny format jak logowanie
+      const { error: insertErr } = await supabase
+        .from('profiles')
+        .insert({
+          email:     emailNormalized,
+          password:  hashedPassword,
+          full_name: form.fullName.trim(),
+          role:      'buyer',
+          is_active: true,
+        })
+
+      if (insertErr) throw insertErr
+
+      setSuccess(true)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Błąd rejestracji'
+      setError(
+        msg.includes('already registered') ? 'Ten adres email jest już zarejestrowany.'
+        : msg.includes('rate limit')        ? 'Zbyt wiele prób. Spróbuj za chwilę.'
+        : msg
+      )
+    } finally {
+      setLoading(false)
     }
-  }, [submitted])
+  }
+
+  if (success) {
+    return (
+      <Card {...props}>
+        <div className="flex flex-col items-center gap-4 p-10 text-center">
+          <CheckCircle2Icon className="w-10 h-10 text-emerald-600" />
+          <CardTitle>Konto utworzone!</CardTitle>
+          <CardDescription>Możesz się teraz zalogować.</CardDescription>
+          <Button onClick={() => navigate('/login')}>Przejdź do logowania</Button>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Card {...props}>
-      {submitted && (
-          <div className="fixed bottom-4 right-4 z-50">
-            <Alert className="max-w-sm shadow-lg">
-              <CheckCircle2Icon />
-              <AlertTitle>Account created successfully!</AlertTitle>
-              <AlertDescription>
-                Welcome to our platform! You are now being redirected to your dashboard.
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
-        
+      {error && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Alert variant="destructive" className="max-w-sm shadow-lg">
+            <AlertCircleIcon />
+            <AlertTitle>Błąd rejestracji</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       <img src={logo} alt="Logo" className="h-10 w-auto m-10" />
       <CardHeader>
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>
-          Enter your information below to create your account
-        </CardDescription>
+        <CardTitle>Utwórz konto</CardTitle>
+        <CardDescription>Wypełnij dane aby dołączyć do systemu</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-            }}>
+        <form onSubmit={handleSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="name">Full Name</FieldLabel>
-              <Input id="name" type="text" placeholder="John Doe" required />
+              <FieldLabel htmlFor="name">Imię i nazwisko</FieldLabel>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Jan Kowalski"
+                required
+                value={form.fullName}
+                onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="jan@firma.pl"
                 required
-                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Please enter a valid email address.')}
-                onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel htmlFor="password">Hasło</FieldLabel>
               <Input
                 id="password"
                 type="password"
                 required
-                regex="^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,24}$"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Must be at least 8 characters long.')}
-                onInput={(e) => (e.target as HTMLInputElement).setCustomValidity('')}
+                value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
               />
-              <FieldDescription>
-                Must be at least 8 characters long.
-              </FieldDescription>
+              <FieldDescription>Minimum 8 znaków.</FieldDescription>
             </Field>
             <Field>
-              <FieldLabel htmlFor="confirm-password">
-                Confirm Password
-              </FieldLabel>
+              <FieldLabel htmlFor="confirm-password">Potwierdź hasło</FieldLabel>
               <Input
                 id="confirm-password"
                 type="password"
                 required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity('Passwords do not match.')}
-                onInput={(e) => {
-                  const input = e.target as HTMLInputElement
-                  input.setCustomValidity(
-                    input.value !== password ? 'Passwords do not match.' : ''
-                  )
-                }}
+                value={form.confirmPassword}
+                onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))}
               />
-              <FieldDescription className={!passwordsMatch ? 'text-destructive' : ''}>
-                {!passwordsMatch ? 'Passwords do not match.' : 'Please confirm your password.'}
+              {!passwordsMatch && (
+                <FieldDescription className="text-destructive">
+                  Hasła nie są identyczne.
+                </FieldDescription>
+              )}
+            </Field>
+            <Field>
+              <Button type="submit" disabled={loading || !passwordsMatch}>
+                {loading
+                  ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Tworzę konto...</>
+                  : 'Utwórz konto'
+                }
+              </Button>
+              <FieldDescription className="text-center">
+                Masz już konto?{" "}
+                <Link to="/login" className="underline-offset-4 hover:underline">
+                  Zaloguj się
+                </Link>
               </FieldDescription>
             </Field>
-            <FieldGroup>
-              <Field>
-                <Button type="submit">Create Account</Button>
-                <FieldDescription className="px-6 text-center">
-                  Already have an account? <Link to="/login">Sign in</Link>
-                </FieldDescription>
-              </Field>
-            </FieldGroup>
           </FieldGroup>
         </form>
       </CardContent>
