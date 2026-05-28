@@ -1,40 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Target, Search, Plus, Eye, Phone, Mail, Building2,
-  Calendar, Filter, Download, MoreHorizontal, CheckCircle,
-  XCircle, Clock, UserPlus, FileText, RefreshCw, 
-  TrendingUp, Users, Zap, Star, Award, Globe,
-  MessageCircle, Send, Trash2
+  Target, Search, Eye, Phone, Building2, Globe, Users,
+  CheckCircle, XCircle, Clock, RefreshCw, Zap,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -51,6 +28,7 @@ interface Lead {
   source: string;
   status: string;
   assigned_to: string | null;
+  buyer_id: string | null;
   created_at: string;
 }
 
@@ -64,23 +42,26 @@ export default function LeadsPage() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
-    fetchLeads();
+    if (user) fetchLeads();
   }, [user]);
 
   const fetchLeads = async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false });
+
+      let query = supabase.from('leads').select('*');
+
+      if (user.role === 'agent_cc' || user.role === 'sales_direct') {
+        query = query.eq('assigned_to', user.id);
+      } else if (user.role === 'buyer') {
+        query = query.eq('buyer_id', user.id);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      console.log('Pobrane leady:', data);
       setLeads(data || []);
-      
     } catch (error) {
       console.error('Błąd pobierania leadów:', error);
     } finally {
@@ -89,16 +70,18 @@ export default function LeadsPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statuses: Record<string, { label: string; color: string; icon: any; bg: string }> = {
-      new: { label: 'Nowy', color: 'bg-blue-500', icon: Clock, bg: 'bg-blue-50 text-blue-700 border-blue-200' },
-      new_web: { label: 'Nowy z web', color: 'bg-blue-500', icon: Clock, bg: 'bg-blue-50 text-blue-700 border-blue-200' },
-      approved: { label: 'Zatwierdzony', color: 'bg-green-500', icon: CheckCircle, bg: 'bg-green-50 text-green-700 border-green-200' },
-      rejected: { label: 'Odrzucony', color: 'bg-red-500', icon: XCircle, bg: 'bg-red-50 text-red-700 border-red-200' },
-      in_progress: { label: 'W trakcie', color: 'bg-yellow-500', icon: Clock, bg: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-      completed: { label: 'Zrealizowany', color: 'bg-green-500', icon: CheckCircle, bg: 'bg-green-50 text-green-700 border-green-200' },
-      available: { label: 'Dostępny', color: 'bg-purple-500', icon: Target, bg: 'bg-purple-50 text-purple-700 border-purple-200' },
+    const statuses: Record<string, { label: string; icon: any; bg: string }> = {
+      new:            { label: 'Nowy',              icon: Clock,        bg: 'bg-blue-50 text-blue-700 border border-blue-200' },
+      new_web:        { label: 'Nowy z web',         icon: Clock,        bg: 'bg-blue-50 text-blue-700 border border-blue-200' },
+      pending_direct: { label: 'Oczekujący (DS)',    icon: Clock,        bg: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
+      pending_cc:     { label: 'Oczekujący (CC)',    icon: Clock,        bg: 'bg-orange-50 text-orange-700 border border-orange-200' },
+      approved:       { label: 'Zatwierdzony',       icon: CheckCircle,  bg: 'bg-green-50 text-green-700 border border-green-200' },
+      rejected:       { label: 'Odrzucony',          icon: XCircle,      bg: 'bg-red-50 text-red-700 border border-red-200' },
+      in_progress:    { label: 'W trakcie',          icon: Clock,        bg: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
+      completed:      { label: 'Zrealizowany',       icon: CheckCircle,  bg: 'bg-green-50 text-green-700 border border-green-200' },
+      available:      { label: 'Dostępny',           icon: Target,       bg: 'bg-purple-50 text-purple-700 border border-purple-200' },
     };
-    const info = statuses[status] || { label: status, color: 'bg-gray-500', icon: Clock, bg: 'bg-gray-50 text-gray-700 border-gray-200' };
+    const info = statuses[status] || { label: status, icon: Clock, bg: 'bg-gray-50 text-gray-700 border border-gray-200' };
     const Icon = info.icon;
     return (
       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${info.bg}`}>
@@ -110,25 +93,16 @@ export default function LeadsPage() {
 
   const getSourceLabel = (source: string) => {
     const sources: Record<string, string> = {
-      web: 'Strona WWW',
-      website: 'Strona WWW',
-      linkedin: 'LinkedIn',
-      referral: 'Polecenie',
-      conference: 'Konferencja',
-      sales_direct: 'Sprzedaż bezpośrednia',
-      call_center: 'Call Center',
-      other: 'Inne'
+      web: 'Strona WWW', website: 'Strona WWW', linkedin: 'LinkedIn',
+      referral: 'Polecenie', conference: 'Konferencja',
+      sales_direct: 'Sprzedaż bezpośrednia', call_center: 'Call Center', other: 'Inne',
     };
     return sources[source] || source || 'Brak';
   };
 
   const getSourceIcon = (source: string) => {
     const icons: Record<string, any> = {
-      web: Globe,
-      website: Globe,
-      linkedin: Users,
-      call_center: Phone,
-      sales_direct: Users,
+      web: Globe, website: Globe, linkedin: Users, call_center: Phone, sales_direct: Users,
     };
     const Icon = icons[source] || Globe;
     return <Icon className="h-3 w-3" />;
@@ -143,32 +117,34 @@ export default function LeadsPage() {
     }
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  const getInitials = (firstName: string, lastName: string) =>
+    `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      'from-pink-500 to-rose-500', 'from-purple-500 to-indigo-500',
+      'from-blue-500 to-cyan-500', 'from-green-500 to-emerald-500',
+      'from-orange-500 to-amber-500', 'from-red-500 to-pink-500',
+    ];
+    return colors[(name?.length || 0) % colors.length];
   };
 
-  const getRandomGradient = (name: string) => {
-    const gradients = [
-      'from-pink-500 to-rose-500',
-      'from-purple-500 to-indigo-500',
-      'from-blue-500 to-cyan-500',
-      'from-green-500 to-emerald-500',
-      'from-orange-500 to-amber-500',
-      'from-red-500 to-pink-500',
-    ];
-    const index = (name?.length || 0) % gradients.length;
-    return gradients[index];
+  const getPageTitle = () => {
+    if (user?.role === 'buyer') return 'Moje leady';
+    if (user?.role === 'agent_cc') return 'Kolejka leadów';
+    if (user?.role === 'sales_direct') return 'Moi klienci';
+    return 'Leadzy';
   };
 
   const stats = {
     total: leads.length,
-    new: leads.filter(l => l.status === 'new' || l.status === 'new_web').length,
+    new: leads.filter(l => ['new', 'new_web'].includes(l.status)).length,
     approved: leads.filter(l => l.status === 'approved').length,
     rejected: leads.filter(l => l.status === 'rejected').length,
   };
 
   const filteredLeads = leads.filter(lead => {
-    const matchesSearch = 
+    const matchesSearch =
       (lead.first_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (lead.last_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (lead.company_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -179,89 +155,57 @@ export default function LeadsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Nagłówek z gradientem */}
       <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 rounded-2xl p-6 text-white">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leadzy</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{getPageTitle()}</h1>
             <p className="text-purple-100 mt-1">
-              Zarządzanie wszystkimi lejdami w systemie
+              {user?.role === 'admin'
+                ? 'Zarządzanie wszystkimi leadami w systemie'
+                : user?.role === 'buyer'
+                ? 'Leady przypisane do Twojego konta'
+                : 'Leady przypisane do Ciebie'}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/20" onClick={fetchLeads}>
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Odśwież
-            </Button>
-          </div>
+          <Button variant="ghost" size="sm" className="text-white hover:bg-white/20" onClick={fetchLeads}>
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Odśwież
+          </Button>
         </div>
       </div>
 
-      {/* Karty statystyk */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => setStatusFilter('all')}>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Wszystkie</p>
-                <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
+        {[
+          { label: 'Wszystkie', value: stats.total, color: 'text-gray-800', bg: 'bg-gray-100', icon: Target, filter: 'all' },
+          { label: 'Nowe', value: stats.new, color: 'text-blue-600', bg: 'bg-blue-100', icon: Zap, filter: 'new' },
+          { label: 'Zatwierdzone', value: stats.approved, color: 'text-green-600', bg: 'bg-green-100', icon: CheckCircle, filter: 'approved' },
+          { label: 'Odrzucone', value: stats.rejected, color: 'text-red-600', bg: 'bg-red-100', icon: XCircle, filter: 'rejected' },
+        ].map(({ label, value, color, bg, icon: Icon, filter }) => (
+          <Card
+            key={label}
+            className="cursor-pointer hover:shadow-lg transition-all duration-300"
+            onClick={() => setStatusFilter(filter)}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{label}</p>
+                  <p className={`text-3xl font-bold ${color}`}>{value}</p>
+                </div>
+                <div className={`h-12 w-12 rounded-full ${bg} flex items-center justify-center`}>
+                  <Icon className={`h-6 w-6 ${color}`} />
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-                <Target className="h-6 w-6 text-gray-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => setStatusFilter('new')}>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Nowe</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.new}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <Zap className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => setStatusFilter('approved')}>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Zatwierdzone</p>
-                <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => setStatusFilter('rejected')}>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Odrzucone</p>
-                <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-                <XCircle className="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Wyszukiwarka */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Szukaj po imieniu, nazwisku, firmie lub emailu..."
                 value={searchTerm}
@@ -269,29 +213,29 @@ export default function LeadsPage() {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
-              <select 
-                className="border rounded-lg px-3 py-2 bg-background"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">Wszystkie statusy</option>
-                <option value="new">Nowe</option>
-                <option value="approved">Zatwierdzone</option>
-                <option value="rejected">Odrzucone</option>
-              </select>
-            </div>
+            <select
+              className="border rounded-lg px-3 py-2 bg-background text-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Wszystkie statusy</option>
+              <option value="new">Nowe</option>
+              <option value="new_web">Nowe z web</option>
+              <option value="pending_direct">Oczekujące (DS)</option>
+              <option value="pending_cc">Oczekujące (CC)</option>
+              <option value="approved">Zatwierdzone</option>
+              <option value="rejected">Odrzucone</option>
+              <option value="in_progress">W trakcie</option>
+              <option value="completed">Zrealizowane</option>
+            </select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabela leadów */}
       <Card>
         <CardHeader>
           <CardTitle>Lista leadów</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Znaleziono {filteredLeads.length} leadów
-          </p>
+          <p className="text-sm text-muted-foreground">Znaleziono {filteredLeads.length} leadów</p>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -322,7 +266,7 @@ export default function LeadsPage() {
                     <TableRow key={lead.id} className="hover:bg-purple-50/50 transition-colors">
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${getRandomGradient(lead.first_name)} flex items-center justify-center text-white font-bold text-sm`}>
+                          <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${getAvatarColor(lead.first_name)} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
                             {getInitials(lead.first_name || '', lead.last_name || '')}
                           </div>
                           <div>
@@ -333,27 +277,27 @@ export default function LeadsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{lead.company_name || 'Brak danych'}</span>
+                          <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm">{lead.company_name || '—'}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{lead.phone || 'Brak telefonu'}</span>
+                          <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm">{lead.phone || '—'}</span>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(lead.status)}</TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center gap-1 text-xs">
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                           {getSourceIcon(lead.source)}
                           {getSourceLabel(lead.source)}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => { setSelectedLead(lead); setIsDetailsOpen(true); }}
                           className="hover:bg-purple-100"
                         >
@@ -369,7 +313,6 @@ export default function LeadsPage() {
         </CardContent>
       </Card>
 
-      {/* Modal szczegółów */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -377,43 +320,38 @@ export default function LeadsPage() {
               Szczegóły leada
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedLead && (
             <div className="space-y-4">
               <div className="flex items-center gap-4 pb-4 border-b">
-                <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${getRandomGradient(selectedLead.first_name)} flex items-center justify-center text-white font-bold text-2xl`}>
+                <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${getAvatarColor(selectedLead.first_name)} flex items-center justify-center text-white font-bold text-2xl flex-shrink-0`}>
                   {getInitials(selectedLead.first_name || '', selectedLead.last_name || '')}
                 </div>
                 <div>
                   <h3 className="text-xl font-bold">{selectedLead.first_name} {selectedLead.last_name}</h3>
                   <p className="text-muted-foreground">{selectedLead.company_name}</p>
-                  {getStatusBadge(selectedLead.status)}
+                  <div className="mt-1">{getStatusBadge(selectedLead.status)}</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <Label className="text-muted-foreground text-xs">Email</Label>
-                  <p className="font-medium text-sm">{selectedLead.email}</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <Label className="text-muted-foreground text-xs">Telefon</Label>
-                  <p className="font-medium text-sm">{selectedLead.phone || 'Brak telefonu'}</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <Label className="text-muted-foreground text-xs">Źródło</Label>
-                  <p className="font-medium text-sm">{getSourceLabel(selectedLead.source)}</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <Label className="text-muted-foreground text-xs">Status</Label>
-                  <p className="font-medium text-sm">{getStatusBadge(selectedLead.status)}</p>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Email', value: selectedLead.email },
+                  { label: 'Telefon', value: selectedLead.phone || '—' },
+                  { label: 'Źródło', value: getSourceLabel(selectedLead.source) },
+                  { label: 'Firma', value: selectedLead.company_name || '—' },
+                  { label: 'Data dodania', value: formatDate(selectedLead.created_at) },
+                  { label: 'ID', value: selectedLead.id.slice(0, 8) + '...' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-gray-50 p-3 rounded-lg">
+                    <Label className="text-muted-foreground text-xs">{label}</Label>
+                    <p className="font-medium text-sm mt-0.5">{value}</p>
+                  </div>
+                ))}
               </div>
-              
+
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
-                  Zamknij
-                </Button>
+                <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Zamknij</Button>
                 <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
                   <Phone className="h-4 w-4 mr-2" />
                   Kontakt
