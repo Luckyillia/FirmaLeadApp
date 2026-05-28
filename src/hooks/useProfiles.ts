@@ -73,15 +73,27 @@ export function useUpdateProfile() {
       if (payload.role !== undefined) update.role = payload.role;
       if (payload.isActive !== undefined) update.is_active = payload.isActive;
       if (payload.fullName !== undefined) update.full_name = payload.fullName;
-      if (payload.password !== undefined) {
+      if (payload.password !== undefined && payload.password !== '') {
         update.password = await sha256(payload.password);
       }
-      const { error } = await supabase
+
+      if (Object.keys(update).length === 0) {
+        throw new Error('Brak zmian do zapisania.');
+      }
+
+      const { data, error } = await supabase
         .from('profiles')
         .update(update)
-        .eq('id', payload.id);
+        .eq('id', payload.id)
+        .select('id')
+        .single();
+
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['profiles'] }),
+    onSuccess: (_, payload) => {
+      qc.invalidateQueries({ queryKey: ['profiles'] });
+      qc.invalidateQueries({ queryKey: ['profile', payload.id] });
+    },
   });
 }
