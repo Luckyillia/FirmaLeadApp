@@ -183,7 +183,7 @@ export default function LeadsPage() {
       <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 rounded-2xl p-6 text-white">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leadzy</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Leady</h1>
             <p className="text-purple-100 mt-1">
               Zarządzanie wszystkimi lejdami w systemie
             </p>
