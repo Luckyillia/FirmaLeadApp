@@ -81,7 +81,7 @@ export function AppSidebar() {
       return [
         { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
         { title: "Użytkownicy", path: "/users", icon: Users },
-        { title: "Leadzy", path: "/leads", icon: Target },
+        { title: "Leady", path: "/leads", icon: Target },
         { title: "Spotkania", path: "/meetings", icon: CalendarDays },
         { title: "Raporty", path: "/reports", icon: BarChart3 },
         { title: "Reklamacje", path: "/complaints", icon: AlertCircle },

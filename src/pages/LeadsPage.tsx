@@ -241,7 +241,7 @@ export default function LeadsPage() {
     if (user?.role === 'buyer') return 'Moje leady';
     if (user?.role === 'agent_cc') return 'Kolejka leadów';
     if (user?.role === 'sales_direct') return 'Moi klienci';
-    return 'Leadzy';
+    return 'Leady';
   };
 
   const stats = {
@@ -284,7 +284,7 @@ export default function LeadsPage() {
                 onClick={() => setIsAddOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Dodaj lead
+                Dodaj leada
               </Button>
             )}
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/20" onClick={fetchLeads}>
