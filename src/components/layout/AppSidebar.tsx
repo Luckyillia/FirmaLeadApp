@@ -85,7 +85,6 @@ export function AppSidebar() {
         { title: "Spotkania", path: "/meetings", icon: CalendarDays },
         { title: "Raporty", path: "/reports", icon: BarChart3 },
         { title: "Reklamacje", path: "/complaints", icon: AlertCircle },
-        { title: "Ustawienia", path: "/settings", icon: Settings },
       ];
     }
     

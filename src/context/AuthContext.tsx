@@ -5,10 +5,6 @@ import type { Profile } from '@/types';
 
 const SESSION_KEY = 'leadapp_session';
 
-// ─── Szyfrowanie AES-GCM ────────────────────────────────────────────────────
-// Klucz derywowany z istniejącego VITE_SUPABASE_ANON_KEY (już masz go w .env)
-// Nie potrzebujesz nowej zmiennej środowiskowej.
-
 async function getKey(): Promise<CryptoKey> {
   const secret = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
   const encoder = new TextEncoder();
@@ -36,13 +32,10 @@ async function decryptSession(raw: string): Promise<Profile | null> {
     const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
     return JSON.parse(new TextDecoder().decode(decrypted)) as Profile;
   } catch {
-    // Jeśli sesja jest nieczytelna (np. stary format JSON), czyścimy ją
     sessionStorage.removeItem(SESSION_KEY);
     return null;
   }
 }
-
-// ────────────────────────────────────────────────────────────────────────────
 
 interface AuthContextValue {
   user: Profile | null;
@@ -51,6 +44,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -61,13 +55,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Odszyfruj sesję przy starcie
   React.useEffect(() => {
     const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) {
-      setSessionLoaded(true);
-      return;
-    }
+    if (!raw) { setSessionLoaded(true); return; }
     decryptSession(raw).then(profile => {
       setUser(profile);
       setSessionLoaded(true);
@@ -81,7 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const hashedPassword = await sha256(password);
-
       const { data, error: dbError } = await supabase
         .from('profiles')
         .select('id, email, full_name, role, is_active, created_at')
@@ -90,14 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
 
       if (dbError || !data) throw new Error('Nieprawidłowy email lub hasło.');
-
       const profile = mapProfile(data as Record<string, unknown>);
       if (!profile.isActive) throw new Error('Konto jest nieaktywne. Skontaktuj się z administratorem.');
 
-      // Zapisz zaszyfrowaną sesję (profil + rola)
       const encrypted = await encryptSession(profile);
       sessionStorage.setItem(SESSION_KEY, encrypted);
-
       setUser(profile);
       return true;
     } catch (err: unknown) {
@@ -108,17 +94,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Pobiera świeże dane z bazy i nadpisuje sesję + stan
+  const refreshUser = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error: dbError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, role, is_active, created_at')
+        .eq('id', user.id)
+        .single();
+
+      if (dbError || !data) return;
+      const profile = mapProfile(data as Record<string, unknown>);
+      const encrypted = await encryptSession(profile);
+      sessionStorage.setItem(SESSION_KEY, encrypted);
+      setUser(profile);
+    } catch {
+      // cicho ignorujemy
+    }
+  }, [user]);
+
   const logout = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
     setUser(null);
     setError(null);
   }, []);
 
-  // Czekamy aż sesja zostanie odczytana — zapobiega migotaniu redirectu
   if (!sessionLoaded) return null;
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout, clearError }}>
+    <AuthContext.Provider value={{ user, loading, error, login, logout, clearError, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

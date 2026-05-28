@@ -4,6 +4,7 @@ import LoginPage from '@/LoginPage';
 import RegisterPage from '@/RegisterPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import HeroSection from '@/components/HeroSection';
+import { RequireRole } from '@/components/require-role';
 
 // ✅ NOWE dashboardy (z wykresami)
 import DashboardAdmin from '@/pages/DashboardAdmin';
@@ -64,7 +65,14 @@ function AuthGate() {
         <Route path="/dashboard" element={<RoleBasedDashboard />} />
         
         {/* Admin */}
-        <Route path="/users" element={<UsersPage />} />
+        <Route
+          path="/users"
+          element={
+            <RequireRole roles={['admin']}>
+              <UsersPage />
+            </RequireRole>
+          }
+        />
         <Route path="/leads" element={<LeadsPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/complaints" element={<ComplaintsPage />} />
