@@ -87,7 +87,6 @@ export function AppSidebar() {
         { title: "Leady", path: "/leads", icon: Target },
         { title: "Raporty", path: "/reports", icon: BarChart3 },
         { title: "Reklamacje", path: "/complaints", icon: AlertCircle },
-        { title: "Ustawienia", path: "/settings", icon: Settings },
       ];
     }
     
