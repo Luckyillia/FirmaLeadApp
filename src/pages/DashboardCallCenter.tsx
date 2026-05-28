@@ -46,9 +46,9 @@ export default function DashboardCallCenter() {
   const fetchCallCenterData = async () => {
     try {
       // Pobierz leady w kolejce
-      const { count: queueCount, data: queueLeads } = await supabase
+      const { count: queueCount } = await supabase
         .from('leads')
-        .select('*')
+        .select('*', { count: 'exact', head: true })
         .eq('status', 'new')
         .is('assigned_to', null);
 
@@ -87,10 +87,10 @@ export default function DashboardCallCenter() {
         { hour: '16:00', calls: 7, success: 5 },
       ]);
 
-      setQueueData([
-        { priority: "Wysoki", count: 4, companies: ["Firma XYZ", "Tech Solutions", "Budowlanka", "Eko-Energia"] },
-        { priority: "Średni", count: 5, companies: ["Smart Home", "Net Systems", "Data Center", "Cloud Tech", "AI Solutions"] },
-        { priority: "Niski", count: 3, companies: ["Local Shop", "Small Biz", "Startup X"] },
+      const [queueData, setQueueData] = useState<{ priority: string; count: number; companies: string[] }[]>([
+        { priority: "Wysoki", count: 0, companies: [] },
+        { priority: "Średni", count: 0, companies: [] },
+        { priority: "Niski", count: 0, companies: [] },
       ]);
 
     } catch (error) {
@@ -217,7 +217,7 @@ export default function DashboardCallCenter() {
                   innerRadius={60}
                   outerRadius={100}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

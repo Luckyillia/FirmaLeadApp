@@ -14,7 +14,7 @@ import { useState, useEffect } from "react"
 
 export default function ContactForm() {
   const [values, setValues] = useState({ name: "", email: "", phone: "", message: "" })
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function ContactForm() {
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [field]: e.target.value }))
-    setErrors((er) => ({ ...er, [field]: undefined }))
+    setErrors((er) => { const next = { ...er }; delete next[field]; return next; })
   }
 
   const handleSubmit = (e: React.FormEvent) => {

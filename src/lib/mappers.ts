@@ -8,6 +8,7 @@ export function mapProfile(row: Record<string, unknown>): Profile {
     role: row.role as Profile['role'],
     isActive: row.is_active as boolean,
     createdAt: row.created_at as string,
+    password: (row.password as string) ?? '',
   };
 }
 

@@ -44,8 +44,9 @@ export default function HeroSection() {
             <Button
               variant="ghost"
               className="text-white/80 hover:text-white hover:bg-white/10 text-sm sm:text-xl px-3 sm:px-5 py-2 sm:py-5"
+              asChild
             >
-              Contact
+              <Link to="/contact">Contact</Link>
             </Button>
             <Button
               variant="ghost"
