@@ -1,11 +1,57 @@
+import { useState, type FormEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from '@/context/AuthContext';
+import { useUpdateProfile } from '@/hooks/useProfiles';
 import { Bell, Shield, Mail, Globe, Lock, Save } from 'lucide-react';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
+  const updateProfile = useUpdateProfile();
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!user) {
+      setError('Nie znaleziono zalogowanego użytkownika.');
+      return;
+    }
+
+    if (!password) {
+      setError('Podaj nowe hasło.');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Hasło musi mieć minimum 8 znaków.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Hasła nie są identyczne.');
+      return;
+    }
+
+    try {
+      await updateProfile.mutateAsync({ id: user.id, password });
+      setSuccess('Hasło zostało zmienione pomyślnie.');
+      setPassword('');
+      setConfirmPassword('');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd podczas zmiany hasła.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -45,18 +91,44 @@ export default function SettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label>Zmiana hasła</Label>
-              <Input type="password" placeholder="Nowe hasło" className="mt-1" />
-            </div>
-            <div>
-              <Label>Potwierdź hasło</Label>
-              <Input type="password" placeholder="Potwierdź hasło" className="mt-1" />
-            </div>
-            <Button className="w-full">
-              <Lock className="h-4 w-4 mr-2" />
-              Zmień hasło
-            </Button>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <Label>Zmiana hasła</Label>
+                <Input
+                  type="password"
+                  placeholder="Nowe hasło"
+                  className="mt-1"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Potwierdź hasło</Label>
+                <Input
+                  type="password"
+                  placeholder="Potwierdź hasło"
+                  className="mt-1"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
+              </div>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertTitle>Błąd</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              {success && (
+                <Alert>
+                  <AlertTitle>Sukces</AlertTitle>
+                  <AlertDescription>{success}</AlertDescription>
+                </Alert>
+              )}
+              <Button type="submit" className="w-full" disabled={updateProfile.isLoading}>
+                <Lock className="h-4 w-4 mr-2" />
+                Zmień hasło
+              </Button>
+            </form>
           </CardContent>
         </Card>
 
