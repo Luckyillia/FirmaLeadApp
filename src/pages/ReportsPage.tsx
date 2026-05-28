@@ -96,7 +96,7 @@ export default function ReportsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Leadły ogółem</p>
+                <p className="text-sm text-muted-foreground">Leady ogółem</p>
                 <p className="text-2xl font-bold">1,247</p>
                 <p className="text-xs text-green-600">+156 w tym miesiącu</p>
               </div>
@@ -121,7 +121,7 @@ export default function ReportsPage() {
                 <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
                 <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="leads" stroke="#3b82f6" name="Leadły" />
+                <Line yAxisId="left" type="monotone" dataKey="leads" stroke="#3b82f6" name="Leady" />
                 <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#10b981" name="Przychód (zł)" />
               </LineChart>
             </ResponsiveContainer>

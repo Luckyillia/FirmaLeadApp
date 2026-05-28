@@ -84,7 +84,7 @@ export function AppSidebar() {
       return [
         { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
         { title: "Użytkownicy", path: "/users", icon: Users },
-        { title: "Leadzy", path: "/leads", icon: Target },
+        { title: "Leady", path: "/leads", icon: Target },
         { title: "Raporty", path: "/reports", icon: BarChart3 },
         { title: "Reklamacje", path: "/complaints", icon: AlertCircle },
         { title: "Ustawienia", path: "/settings", icon: Settings },
@@ -105,7 +105,7 @@ export function AppSidebar() {
       return [
         { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
         { title: "Moi klienci", path: "/my-clients", icon: UserCheck },
-        { title: "Leadzy", path: "/leads", icon: Target },
+        { title: "Leady", path: "/leads", icon: Target },
         { title: "Oferty", path: "/offers", icon: FileText },
         { title: "Spotkania", path: "/meetings", icon: Calendar },
       ];

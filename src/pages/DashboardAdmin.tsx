@@ -75,7 +75,7 @@ export default function DashboardAdmin() {
 
   const statCards = [
     { title: "Użytkownicy", value: stats.totalUsers, icon: Users, change: "+12%", color: "from-blue-500 to-blue-600", bg: "bg-blue-50" },
-    { title: "Leadły", value: stats.totalLeads, icon: Target, change: "+23%", color: "from-green-500 to-green-600", bg: "bg-green-50" },
+    { title: "Leady", value: stats.totalLeads, icon: Target, change: "+23%", color: "from-green-500 to-green-600", bg: "bg-green-50" },
     { title: "Reklamacje", value: stats.totalComplaints, icon: AlertCircle, change: "-8%", color: "from-red-500 to-red-600", bg: "bg-red-50" },
     { title: "Konwersja", value: `${stats.conversionRate}%`, icon: TrendingUp, change: "+5%", color: "from-purple-500 to-purple-600", bg: "bg-purple-50" },
     { title: "Przychód", value: `${(stats.monthlyRevenue / 1000).toFixed(0)}k zł`, icon: DollarSign, change: "+18%", color: "from-emerald-500 to-emerald-600", bg: "bg-emerald-50" },
@@ -115,11 +115,11 @@ export default function DashboardAdmin() {
         ))}
       </div>
 
-      {/* Wykres liniowy - Leadły miesięczne */}
+      {/* Wykres liniowy - Leady miesięczne */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Leadły w 2024</CardTitle>
+            <CardTitle>Leady w 2024</CardTitle>
             <p className="text-sm text-muted-foreground">Ilość leadów w poszczególnych miesiącach</p>
           </CardHeader>
           <CardContent>
@@ -130,7 +130,7 @@ export default function DashboardAdmin() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="leads" stroke="#3b82f6" strokeWidth={2} name="Leadły" />
+                <Line type="monotone" dataKey="leads" stroke="#3b82f6" strokeWidth={2} name="Leady" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

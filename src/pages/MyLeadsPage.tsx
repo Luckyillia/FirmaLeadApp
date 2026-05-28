@@ -36,7 +36,7 @@ export default function MyLeadsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Moje leady</h1>
-        <p className="text-muted-foreground">Leadły które odebrałeś</p>
+        <p className="text-muted-foreground">Leady które odebrałeś</p>
       </div>
 
       {/* Statystyki */}

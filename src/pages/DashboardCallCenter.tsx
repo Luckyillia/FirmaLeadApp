@@ -250,7 +250,7 @@ export default function DashboardCallCenter() {
       <Card>
         <CardHeader>
           <CardTitle>Kolejka leadów</CardTitle>
-          <p className="text-sm text-muted-foreground">Leadły oczekujące na obsługę</p>
+          <p className="text-sm text-muted-foreground">Leady oczekujące na obsługę</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
