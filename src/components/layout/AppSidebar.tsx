@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '@/assets/svg/logo.svg';
 import { 
@@ -33,18 +32,16 @@ import {
   LogOut,
   User,
   ChevronDown,
-  Sparkles,
-  Bell,
   PhoneCall,
   MessageSquare,
   Calendar,
   PieChart,
-  TrendingUp,
   UserCheck,
   FileText,
   Package,
   ShoppingCart,
-  History
+  History,
+  CalendarDays
 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -76,7 +73,7 @@ export function AppSidebar() {
     navigate('/login');
   };
 
-  // ✅ MENU zależne od roli - DASHBOARD przekierowuje do /dashboard (nowy dashboard)
+  // ✅ MENU zależne od roli
   const getMenuItems = () => {
     const role = user.role;
     
@@ -85,6 +82,7 @@ export function AppSidebar() {
         { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
         { title: "Użytkownicy", path: "/users", icon: Users },
         { title: "Leadzy", path: "/leads", icon: Target },
+        { title: "Spotkania", path: "/meetings", icon: CalendarDays },
         { title: "Raporty", path: "/reports", icon: BarChart3 },
         { title: "Reklamacje", path: "/complaints", icon: AlertCircle },
         { title: "Ustawienia", path: "/settings", icon: Settings },
@@ -96,7 +94,7 @@ export function AppSidebar() {
         { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
         { title: "Kolejka leadów", path: "/leads", icon: PhoneCall },
         { title: "Moje rozmowy", path: "/my-calls", icon: MessageSquare },
-        { title: "Kalendarz", path: "/calendar", icon: Calendar },
+        // Kalendarz usunięty - agenci go nie mają
         { title: "Raporty", path: "/reports", icon: PieChart },
       ];
     }
@@ -139,9 +137,9 @@ export function AppSidebar() {
     <Sidebar className="border-r border-gray-200 dark:border-gray-800">
       {/* Logo */}
       <SidebarHeader className="border-b border-gray-200 dark:border-gray-800 p-4">
-          <div className={"rounded-lg flex items-center justify-center"}>
-            <img src={logo} alt="Logo" className="w-full h-full" />
-          </div>
+        <div className="rounded-lg flex items-center justify-center">
+          <img src={logo} alt="Logo" className="w-full h-full" />
+        </div>
       </SidebarHeader>
 
       {/* Menu */}
