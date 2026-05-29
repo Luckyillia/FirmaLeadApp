@@ -124,7 +124,7 @@ export default function SettingsPage() {
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
-              <Button type="submit" className="w-full" disabled={updateProfile.isLoading}>
+              <Button type="submit" className="w-full" disabled={updateProfile.isPending}>
                 <Lock className="h-4 w-4 mr-2" />
                 Zmień hasło
               </Button>

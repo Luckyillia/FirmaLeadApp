@@ -208,7 +208,7 @@ export default function MeetingsPage() {
     if (!form.title.trim()) errors.title = 'Tytuł jest wymagany';
     if (!form.lead_id) errors.lead_id = 'Lead jest wymagany';
     if (!form.meeting_date) errors.meeting_date = 'Data i godzina są wymagane';
-    if (form.duration_minutes < 1) errors.duration_minutes = 'Czas trwania musi być większy niż 0';
+    if (form.duration_minutes < 1) (errors as Record<string, string>).duration_minutes = 'Czas trwania musi być większy niż 0';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
