@@ -7,10 +7,44 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { AddMeetingModal } from "@/components/AddMeetingModal";
 
 import { Link } from 'react-router-dom';
 
+interface Meeting {
+  id: string;
+  title: string;
+  description: string | null;
+  lead_id: string | null;
+  created_by: string | null;
+  assigned_to: string | null;
+  meeting_date: string;
+  duration_minutes: number;
+  location: string | null;
+  meeting_type: 'online' | 'in_person' | 'phone';
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled';
+  notes: string | null;
+  reminder_sent: boolean;
+  created_at: string;
+  updated_at: string;
+  lead?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    company_name: string;
+    email: string;
+    phone: string;
+  };
+  assignee?: {
+    id: string;
+    full_name: string;
+    email: string;
+    role: string;
+  };
+}
+
 export default function DashboardSales() {
+  const [isAddOpen, setIsAddOpen] = useState(false);
   const { user } = useAuth();
   const [stats, setStats] = useState({
     pipelineValue: 0,
@@ -20,6 +54,101 @@ export default function DashboardSales() {
     completedDeals: 0,
     totalRevenue: 0
   });
+  const isAdmin = user?.role === 'admin';
+  const [leads, setLeads] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]); 
+  const isSalesDirect = user?.role === 'sales_direct';
+  const canAccess = isAdmin || isSalesDirect; 
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLeads();
+    fetchMeetings
+    fetchSalesData();
+  }, [user]);
+
+  const fetchMeetings = async () => {
+    if (!user || !canAccess) return;
+    try {
+      setLoading(true);
+      
+      let query = supabase
+        .from('meetings')
+        .select(`
+          *,
+          lead:lead_id (
+            first_name,
+            last_name,
+            company_name,
+            email,
+            phone
+          )
+        `)
+        .order('meeting_date', { ascending: true });
+      
+      // Jeśli NIE jest adminem (czyli jest sales_direct) - filtruj tylko swoje spotkania
+      if (!isAdmin) {
+        query = query.eq('assigned_to', user.id);
+      }
+      
+      const { data: meetingsData, error: meetingsError } = await query;
+      
+      if (meetingsError) {
+        console.error('Błąd pobierania spotkań:', meetingsError);
+        throw meetingsError;
+      }
+      
+      console.log('Pobrano spotkań:', meetingsData?.length);
+      
+      // Pobierz dane przypisanych użytkowników (dla admina)
+      if (isAdmin && meetingsData && meetingsData.length > 0) {
+        const userIds = new Set<string>();
+        meetingsData.forEach(meeting => {
+          if (meeting.assigned_to) userIds.add(meeting.assigned_to);
+          if (meeting.created_by) userIds.add(meeting.created_by);
+        });
+        
+        if (userIds.size > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, role')
+            .in('id', Array.from(userIds));
+          
+          if (profilesData) {
+            const meetingsWithUsers = meetingsData.map(meeting => ({
+              ...meeting,
+              assignee: profilesData.find(p => p.id === meeting.assigned_to),
+              creator: profilesData.find(p => p.id === meeting.created_by)
+            }));
+            setMeetings(meetingsWithUsers);
+            return;
+          }
+        }
+      }
+      
+      setMeetings(meetingsData || []);
+      
+    } catch (error) {
+      console.error('Błąd pobierania spotkań:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLeads = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('id, first_name, last_name, company_name, email, phone, status')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setLeads(data || []);
+    } catch (error) {
+      console.error('Błąd pobierania leadów:', error);
+    }
+  };
 
   const [pipelineData, setPipelineData] = useState([
     { stage: "Nowe", value: 0, count: 0, color: "#3b82f6" },
@@ -42,10 +171,6 @@ export default function DashboardSales() {
     { company: "Industry Solutions", value: 38000, probability: 70, daysLeft: 12, status: "Oferta" },
     { company: "Global Trade", value: 32000, probability: 90, daysLeft: 3, status: "Negocjacje" },
   ]);
-
-  useEffect(() => {
-    fetchSalesData();
-  }, [user]);
 
   const fetchSalesData = async () => {
     try {
@@ -251,6 +376,15 @@ export default function DashboardSales() {
           </CardContent>
         </Card>
       </div>
+      <AddMeetingModal 
+        isOpen={isAddOpen} 
+        onOpenChange={setIsAddOpen}
+        isAdmin={isAdmin}
+        userId={user?.id}
+        leads={leads}
+        users={users}
+        onSuccess={fetchMeetings} // Przekazujemy funkcję odświeżania danych
+      />
 
       {/* Szybkie akcje */}
       <Card>
@@ -271,7 +405,7 @@ export default function DashboardSales() {
                 <span>Wyślij email</span>
               </Button>
             </a>
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
+            <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => setIsAddOpen(true)}>
               <Calendar className="h-5 w-5" />
               <span>Umów spotkanie</span>
             </Button>
@@ -283,5 +417,6 @@ export default function DashboardSales() {
         </CardContent>
       </Card>
     </div>
+    
   );
 }
