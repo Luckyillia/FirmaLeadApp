@@ -392,7 +392,7 @@ export default function DashboardSales() {
           <CardTitle>Szybkie akcje</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <a className="h-20 flex flex-col gap-2" href="tel:+48666666666">
               <Button variant="outline" className="h-20 flex flex-col gap-2">
                 <PhoneCall className="h-5 w-5" />
@@ -408,10 +408,6 @@ export default function DashboardSales() {
             <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => setIsAddOpen(true)}>
               <Calendar className="h-5 w-5" />
               <span>Umów spotkanie</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
-              <FileText className="h-5 w-5" />
-              <span>Wyślij ofertę</span>
             </Button>
           </div>
         </CardContent>
