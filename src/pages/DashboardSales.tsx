@@ -399,12 +399,12 @@ export default function DashboardSales() {
                 <span>Zadzwoń</span>
               </Button>
             </a>
-            <a className="h-20 flex flex-col gap-2" href="/contact">
+            <Link className="h-20 flex flex-col gap-2" to="/contact">
               <Button variant="outline" className="h-20 flex flex-col gap-2">
                 <Mail className="h-5 w-5" />
                 <span>Wyślij email</span>
               </Button>
-            </a>
+            </Link>
             <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => setIsAddOpen(true)}>
               <Calendar className="h-5 w-5" />
               <span>Umów spotkanie</span>
