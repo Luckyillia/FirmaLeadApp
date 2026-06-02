@@ -57,7 +57,7 @@ function AuthGate() {
       <Route path="/" element={!user ? <HeroSection /> : <Navigate to="/dashboard" />} />
       <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
       <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/dashboard" />} />
-      <Route path="/contact" element={!user ? <ContactForm /> : <Navigate to="/contact" />} />
+      <Route path="/contact" element={<ContactForm />}/>
 
       {/* Chronione */}
       <Route element={user ? <AppLayout /> : <Navigate to="/login" />}>

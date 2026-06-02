@@ -8,6 +8,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
+import { Link } from 'react-router-dom';
+
 export default function DashboardSales() {
   const { user } = useAuth();
   const [stats, setStats] = useState({
@@ -257,14 +259,18 @@ export default function DashboardSales() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
-              <PhoneCall className="h-5 w-5" />
-              <span>Zadzwoń</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col gap-2">
-              <Mail className="h-5 w-5" />
-              <span>Wyślij email</span>
-            </Button>
+            <a className="h-20 flex flex-col gap-2" href="tel:+48666666666">
+              <Button variant="outline" className="h-20 flex flex-col gap-2">
+                <PhoneCall className="h-5 w-5" />
+                <span>Zadzwoń</span>
+              </Button>
+            </a>
+            <a className="h-20 flex flex-col gap-2" href="/contact">
+              <Button variant="outline" className="h-20 flex flex-col gap-2">
+                <Mail className="h-5 w-5" />
+                <span>Wyślij email</span>
+              </Button>
+            </a>
             <Button variant="outline" className="h-20 flex flex-col gap-2">
               <Calendar className="h-5 w-5" />
               <span>Umów spotkanie</span>
